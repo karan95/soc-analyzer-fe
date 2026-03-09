@@ -39,7 +39,6 @@ export default function LogJobCard({ filename, status }: JobCardProps) {
     <Paper withBorder shadow="sm" p="md" radius="md">
       <Group justify="space-between" wrap="nowrap" align="flex-start">
         <Group gap="md">
-          {/* Dynamic Icon */}
           <ThemeIcon 
             size="lg" 
             radius="md" 
@@ -72,7 +71,7 @@ export default function LogJobCard({ filename, status }: JobCardProps) {
           <Group gap="sm">
             <Loader size="xs" type="dots" />
             <Text size="xs" fw={500} c="dimmed">
-              Pipeline active: Cascading through Gemini 1.5 & DeepSeek-R1...
+              Pipeline active: Cascading through AI systems...
             </Text>
           </Group>
         </Stack>

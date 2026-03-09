@@ -11,12 +11,15 @@ import {
   Pagination,
   Center,
   Stack,
-  Loader
+  Loader,
+  Modal
 } from '@mantine/core';
 import { IconSearch, IconUpload, IconFileAlert } from '@tabler/icons-react';
+import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useAllLogs } from '../hooks/useLogs';
+import { useAllLogs, useDeleteLog } from '../hooks/useLogs';
 import { formatFileSize } from '../utils';
+import { notifications } from '@mantine/notifications';
 
 export default function LogFiles() {
   const navigate = useNavigate();
@@ -49,6 +52,32 @@ export default function LogFiles() {
     log.filename.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  // State and handlers for Delete functionality
+  const [logToDelete, setLogToDelete] = useState<any>(null);
+  const deleteMutation = useDeleteLog();
+
+  const handleDelete = () => {
+    if (!logToDelete) return;
+    deleteMutation.mutate(logToDelete.id, {
+      onSuccess: () => {
+        notifications.show({
+          title: 'Deleted Successfully',
+          message: `${logToDelete.filename} has been removed.`,
+          color: 'green',
+        });
+        setLogToDelete(null);
+      },
+      onError: () => {
+        notifications.show({
+          title: 'Error',
+          message: 'Failed to delete the log file.',
+          color: 'red',
+        });
+        setLogToDelete(null);
+      }
+    });
+  };
+
   return (
     <Box w="100%" maw="100%" p={{ base: 'md', md: 'xl' }}>
       <Stack gap="xl" w="100%">
@@ -56,7 +85,7 @@ export default function LogFiles() {
           <div>
             <Title order={2} fw={700}>Log Processing History</Title>
             <Text c="dimmed" size="sm" mt={4}>
-              View and manage previously uploaded ZScaler and firewall logs.
+              View and manage previously uploaded ZScaler web proxy logs
             </Text>
           </div>
           <Button 
@@ -131,14 +160,25 @@ export default function LogFiles() {
                         </Badge>
                       </Table.Td>
                       <Table.Td ta="right">
-                        <Button 
-                          variant="subtle" 
-                          size="xs" 
-                          disabled={log.status !== 'completed'}
-                          onClick={() => navigate(`/logs/${log.id}`)}
-                        >
-                          View Analysis
-                        </Button>
+                        <Group gap="xs" justify="flex-end">
+                          <Button 
+                            variant="subtle" 
+                            size="xs" 
+                            disabled={log.status !== 'completed'}
+                            onClick={() => navigate(`/logs/${log.id}`)}
+                          >
+                            View Analysis
+                          </Button>
+                          <Button 
+                            variant="subtle" 
+                            color="red" 
+                            size="xs"
+                            disabled={log.status === 'pending' || log.status === 'processing'}
+                            onClick={() => setLogToDelete(log)}
+                          >
+                            Delete
+                          </Button>
+                        </Group>
                       </Table.Td>
                     </Table.Tr>
                   ))
@@ -159,6 +199,21 @@ export default function LogFiles() {
             <Pagination total={1} color="blue" radius="md" />
           </Group>
         </Paper>
+
+        <Modal
+          opened={!!logToDelete}
+          onClose={() => setLogToDelete(null)}
+          title="Confirm Deletion"
+          centered
+        >
+          <Text size="sm" mb="xl">
+            Are you sure you want to delete <strong>{logToDelete?.filename}</strong>? This will permanently remove the file, the raw logs data lake, and all associated AI anomalies.
+          </Text>
+          <Group justify="flex-end">
+            <Button variant="default" onClick={() => setLogToDelete(null)}>Cancel</Button>
+            <Button color="red" loading={deleteMutation.isPending} onClick={handleDelete}>Delete</Button>
+          </Group>
+        </Modal>
       </Stack>
     </Box>
   );

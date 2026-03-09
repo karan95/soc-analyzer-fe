@@ -118,7 +118,6 @@ export default function LogIngestion() {
           <Dropzone
             onDrop={handleDrop}
             multiple={false}
-            // 5. Use TanStack's built-in pending states for the loading spinner
             loading={checkDuplicate.isPending || uploadLog.isPending}
             maxSize={10 * 1024 ** 2} // 10MB limit
             accept={{

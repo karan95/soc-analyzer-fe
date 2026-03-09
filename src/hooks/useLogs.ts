@@ -1,4 +1,9 @@
-import { useMutation, useQuery, useInfiniteQuery } from "@tanstack/react-query";
+import {
+  useMutation,
+  useQuery,
+  useInfiniteQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import apiClient from "../api/client";
 
 // 2. Hook for checking duplicates before upload
@@ -6,7 +11,7 @@ export function useCheckDuplicate() {
   return useMutation({
     mutationFn: async (hash: string) => {
       const { data } = await apiClient.get(`/api/logs/check/${hash}`);
-      return data; // returns { exists: boolean, uploadId?: string, status?: string }
+      return data;
     },
   });
 }
@@ -16,8 +21,8 @@ export function useUploadLog() {
   return useMutation({
     mutationFn: async ({ file, hash }: { file: File; hash: string }) => {
       const formData = new FormData();
-      formData.append("file", file);
       formData.append("hash", hash);
+      formData.append("file", file);
 
       const { data } = await apiClient.post("/api/logs/upload", formData, {
         headers: {
@@ -71,7 +76,7 @@ export function useLogAnalysis(jobId: string | undefined) {
   });
 }
 
-// NEW: Infinite scroll hook for events
+// Infinite scroll hook for events
 export function useLogEventsInfinite(
   jobId: string | undefined,
   onlyAnomalies: boolean = true,
@@ -111,7 +116,7 @@ export function useLogEventsInfinite(
 }
 
 // ==========================================
-// NEW: Standard Paginated Hook for Raw Logs Data Lake
+// Standard Paginated Hook for Raw Logs Data Lake
 // ==========================================
 export function useRawLogsPaginated(
   jobId: string | undefined,
@@ -132,7 +137,6 @@ export function useRawLogsPaginated(
       return data;
     },
     enabled: !!jobId,
-    // This is crucial for UI UX: it keeps the old table data visible while
     // fetching the next page, preventing the table height from collapsing to 0.
     placeholderData: (previousData) => previousData,
   });
@@ -147,6 +151,22 @@ export function useGlobalIntelligence(timeRange: string | null) {
         params: { timeRange: timeRange || "24h" },
       });
       return data;
+    },
+  });
+}
+
+// Hook to delete a log file and invalidate the table data
+export function useDeleteLog() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { data } = await apiClient.delete(`/api/logs/${id}`);
+      return data;
+    },
+    onSuccess: () => {
+      // Instantly refreshes the table after a successful delete
+      queryClient.invalidateQueries({ queryKey: ["all-logs"] });
+      queryClient.invalidateQueries({ queryKey: ["active-logs"] });
     },
   });
 }

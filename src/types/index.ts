@@ -1,5 +1,3 @@
-// src/types/index.ts
-
 // 1. RAW LOG SCHEMA: Maps exactly to the parsed ZScaler CSV
 export interface ZScalerLogEntry {
   id: string;

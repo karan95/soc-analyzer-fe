@@ -47,7 +47,7 @@ export default function Login() {
       <ThemeToggle />
       <Paper radius="md" p="xl" withBorder shadow="xl" w={420}>
         <Title order={2} ta="center" fw={900}>
-          SOC Analyst Portal
+          SentinelGrid Portal
         </Title>
         <Text c="dimmed" size="sm" ta="center" mt={5} mb="xl">
           Secure access for threat intelligence and log analysis

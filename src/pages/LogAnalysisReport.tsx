@@ -12,6 +12,7 @@ import {
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useInView } from 'react-intersection-observer';
 import RawLogExplorer from '../components/RawLogExplorer'; 
+import { useDebouncedValue } from "@mantine/hooks";
 import { useLogAnalysis, useLogEventsInfinite } from '../hooks/useLogs';
 
 // Helper to determine severity colors
@@ -32,9 +33,7 @@ const extractUser = (desc: string) => {
 };
 
 // ==========================================
-// OPTIMIZATION FIX 1: Memoized Timeline Item
-// This completely eliminates the lag when clicking "View Details"
-// because only this single item re-renders, not the whole 200-item list.
+// Timeline Item
 // ==========================================
 const AnomalyTimelineItem = memo(({ anomaly, jumpToRawLog }: { anomaly: any, jumpToRawLog: (url: string) => void }) => {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -102,7 +101,7 @@ const AnomalyTimelineItem = memo(({ anomaly, jumpToRawLog }: { anomaly: any, jum
                 <Box>
                   <Group gap="xs" mb="xs">
                     <IconServer size={16} color="var(--mantine-color-blue-6)" />
-                    <Text size="sm" fw={700}>DeepSeek-R1 Forensic Reasoning</Text>
+                    <Text size="sm" fw={700}>AI Forensic Reasoning</Text>
                   </Group>
                   <Text size="sm" lh={1.5} fs={isPending ? 'italic' : 'normal'} c={isPending ? 'dimmed' : 'text'}>
                     {anomaly.reasoning || "Forensic analysis is currently running. Please wait..."}
@@ -160,14 +159,7 @@ export default function LogAnalysisReport() {
   
   // Debounced IP Search to prevent API spam while typing
   const [searchInput, setSearchInput] = useState<string>(''); 
-  const [searchIp, setSearchIp] = useState<string>('');       
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setSearchIp(searchInput);
-    }, 400);
-    return () => clearTimeout(timer);
-  }, [searchInput]);
+  const [searchIp] = useDebouncedValue(searchInput, 400);
 
   const { data: report, isLoading: isReportLoading, isError: isReportError } = useLogAnalysis(jobId);
 
@@ -271,7 +263,7 @@ export default function LogAnalysisReport() {
                       <ThemeIcon size="lg" radius="md" variant="light" color="blue">
                         <IconBrain size={20} />
                       </ThemeIcon>
-                      <Title order={4}>Gemini Triage Summary</Title>
+                      <Title order={4}>Threat Triage Summary</Title>
                     </Group>
                     <Text size="md" lh={1.6}>{analysis?.summary || "Summary pending..."}</Text>
                   </Paper>
@@ -296,7 +288,7 @@ export default function LogAnalysisReport() {
 
               {status === 'processing' && (
                 <Alert icon={<IconAlertCircle size={16} />} title="Analysis in Progress" color="blue" mt="xl">
-                  DeepSeek is actively analyzing the threats. The timeline will update automatically.
+                  The AI is actively analyzing the threats. The timeline will update automatically.
                 </Alert>
               )}
 

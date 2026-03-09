@@ -41,7 +41,6 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Updated IA: Global Intel -> Active Workspace -> Archives
   const navItems = [
     { icon: IconLayoutDashboard, label: 'Threat Intel', to: '/' },
     { icon: IconRadar, label: 'Log Ingestion', to: '/ingest' },
@@ -64,7 +63,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             {/* Burger menu only shows on small screens */}
             <Burger opened={opened} onClick={toggle} hiddenFrom="sm" size="sm" />
             <IconShieldLock size={28} color="var(--mantine-color-blue-6)" />
-            <Title order={3} fw={700}>SOC AI Analyzer</Title>
+            <Title order={3} fw={700}>SentinelGrid AI</Title>
           </Group>
 
           <Group gap="sm">
@@ -77,7 +76,6 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
               {computedColorScheme === 'dark' ? <IconSun size={20} stroke={1.5} /> : <IconMoon size={20} stroke={1.5} />}
             </ActionIcon>
             
-            {/* Enterprise User Menu Dropdown */}
             <Menu shadow="md" width={200} position="bottom-end">
               <Menu.Target>
                 <Avatar radius="xl" color="blue" style={{ cursor: 'pointer' }}>{initials}</Avatar>

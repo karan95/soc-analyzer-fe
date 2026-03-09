@@ -1,73 +1,73 @@
-# React + TypeScript + Vite
+# SentinelGrid - SOC Analyzer (Frontend)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+SentinelGrid is a sophisticated Security Operations Center (SOC) dashboard designed for analyzing ZScaler network logs. It leverages a modern, type-safe stack to provide real-time threat visualization and deep-dive forensic analysis.
 
-Currently, two official plugins are available:
+## Key Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+* **AI-Powered Threat Triage:** Interface specifically designed to review anomalies detected by the Gemini/DeepSeek backend pipeline.
+* **Global Intelligence:** Interactive dashboards visualizing security trends and severity distributions.
+* **Log Ingestion Engine:** Drag-and-drop log uploading with real-time progress tracking and duplicate prevention (via file hashing).
+* **Forensic Explorer:** Granular raw log viewing with server-side pagination and advanced filtering.
+* **Robust Session Management:** Secure authentication with automatic inactivity timeouts and rolling token refreshes.
 
-## React Compiler
+## Tech Stack
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+* **Framework:** [React 19](https://react.dev/) (Vite-powered)
+* **UI Components:** [Mantine UI v8](https://mantine.dev/)
+* **State Management:** [TanStack Query v5](https://tanstack.com/query) (React Query)
+* **Routing:** [React Router 7](https://reactrouter.com/)
+* **API Client:** [Axios](https://axios-http.com/)
+* **Icons:** [Tabler Icons](https://tabler.io/icons)
 
-## Expanding the ESLint configuration
+## Local Setup
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+### 1. Install Dependencies
+```bash
+npm install
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## Configure Environment
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+Create a `.env` file in the root directory:
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```env
+VITE_API_URL=http://localhost:3000/api
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+---
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## Development Mode
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+Start the development server:
+
+```bash
+npm run start
 ```
+
+---
+
+## 📂 Project Structure
+
+- **src/api/**  
+  Axios instance and centralized API logic.
+
+- **src/components/**  
+  Shared UI components such as `LogJobCard`, `RawLogExplorer`, and layout components.
+
+- **src/hooks/**  
+  Custom hooks for data fetching (`useLogs`) and authentication (`useAuth`).
+
+- **src/pages/**  
+  Core application views including **Threat Intelligence**, **Log Analysis**, and **Log Ingestion**.
+
+- **src/types/**  
+  Centralized TypeScript interfaces for API responses and log models.
+
+- **src/utils/**  
+  Utility functions for file hashing and formatting.
+
+---
+
+## 🔐 Credentials for Testing
+
+**Email:** `trial@soc.local`  
+**Password:** `Password123!`
