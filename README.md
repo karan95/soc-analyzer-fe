@@ -71,3 +71,13 @@ npm run start
 
 **Email:** `trial@soc.local`  
 **Password:** `Password123!`
+
+ ### More users creds:
+ - email: "admin@soc.local", password: "SecurePassword123!"
+ - email: "analyst1@soc.local", password: "Password123!"
+ - email: "analyst2@soc.local", password: "Password123!"
+ - email: "viewer@soc.local", password: "Password123!"
+
+## Testing
+
+- Testing files are located in /test-files folder
