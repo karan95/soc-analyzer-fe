@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { memo, useState, useEffect } from "react";
 import {
   Paper,
   Group,
@@ -12,7 +12,7 @@ import {
   Stack,
   Loader,
 } from "@mantine/core";
-import { useDebouncedValue } from "@mantine/hooks";
+import { useDebouncedCallback } from "@mantine/hooks";
 import { IconSearch, IconAlertTriangle } from "@tabler/icons-react";
 import { useSearchParams } from "react-router-dom";
 import { useRawLogsPaginated } from "../hooks/useLogs";
@@ -21,85 +21,17 @@ interface RawLogExplorerProps {
   jobId: string;
 }
 
-export default function RawLogExplorer({ jobId }: RawLogExplorerProps) {
-  const [searchParams, setSearchParams] = useSearchParams();
-  const urlQuery = searchParams.get("q") || "";
+const MemoizedLogTable = memo(
+  ({ logs, isFetching }: { logs: any[]; isFetching: boolean }) => {
+    const formatBytes = (bytes: number | null | undefined) => {
+      if (!bytes || isNaN(bytes) || bytes === 0) return "0 B";
+      const k = 1024;
+      const sizes = ["B", "KB", "MB", "GB"];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + " " + sizes[i];
+    };
 
-  const [page, setPage] = useState(1);
-  const [searchInput, setSearchInput] = useState(urlQuery);
-  const [debouncedSearch] = useDebouncedValue(searchInput, 500);
-
-  // Track if the user is actively typing to prevent React Router from overriding the input
-  const [isTyping, setIsTyping] = useState(false);
-
-  // 1. Deep Link Sync: ONLY update local input if the URL changes externally AND the user isn't typing
-  useEffect(() => {
-    if (!isTyping && urlQuery !== searchInput) {
-      setSearchInput(urlQuery);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [urlQuery, isTyping]);
-
-  // 2. Debounce Search
-  useEffect(() => {
-    setSearchParams(
-      (prev) => {
-        if (debouncedSearch) prev.set("q", debouncedSearch);
-        else prev.delete("q");
-        return prev;
-      },
-      { replace: true },
-    );
-    setPage(1); // Reset page on new search
-  }, [debouncedSearch, setSearchParams]);
-
-  const { data, isFetching } = useRawLogsPaginated(jobId, page, 20, urlQuery);
-
-  const logs = data?.data || [];
-  const totalPages = data?.totalPages || 1;
-  const totalRecords = data?.totalRecords || 0;
-
-  const formatBytes = (bytes: number | null | undefined) => {
-    if (!bytes || isNaN(bytes) || bytes === 0) return "0 B";
-    const k = 1024;
-    const sizes = ["B", "KB", "MB", "GB"];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + " " + sizes[i];
-  };
-
-  return (
-    <Paper
-      withBorder
-      shadow="sm"
-      radius="md"
-      w="100%"
-      style={{ overflow: "hidden" }}
-    >
-      {/* Added wrap="wrap" and flex properties so the search bar isn't crushed on mobile */}
-      <Group
-        justify="space-between"
-        p="md"
-        style={{ borderBottom: "1px solid var(--mantine-color-border)" }}
-        wrap="wrap"
-      >
-        <Group gap="sm" style={{ flexGrow: 1, flexBasis: "300px" }}>
-          <TextInput
-            placeholder="Search URL, IP, User, UA, or Threat..."
-            leftSection={<IconSearch size={16} />}
-            value={searchInput}
-            onChange={(e) => setSearchInput(e.currentTarget.value)}
-            onFocus={() => setIsTyping(true)}
-            onBlur={() => setIsTyping(false)}
-            style={{ flexGrow: 1 }} // Allows input to stretch dynamically
-            w={{ base: "100%", sm: "auto" }}
-          />
-          {isFetching && <Loader size="xs" color="gray" />}
-        </Group>
-        <Text size="sm" c="dimmed" style={{ whiteSpace: "nowrap" }}>
-          {totalRecords.toLocaleString()} events found
-        </Text>
-      </Group>
-
+    return (
       <Table.ScrollContainer minWidth={1200}>
         <Table
           verticalSpacing="sm"
@@ -161,7 +93,6 @@ export default function RawLogExplorer({ jobId }: RawLogExplorerProps) {
                           </Text>
                         </Tooltip>
                       </Group>
-                      {/* Highlight unusual User Agents */}
                       <Text
                         size="xs"
                         c={
@@ -289,6 +220,103 @@ export default function RawLogExplorer({ jobId }: RawLogExplorerProps) {
           </Table.Tbody>
         </Table>
       </Table.ScrollContainer>
+    );
+  },
+);
+
+const IsolatedSearchBar = ({
+  initialValue,
+  onDebouncedSearch,
+  isFetching,
+}: {
+  initialValue: string;
+  onDebouncedSearch: (val: string) => void;
+  isFetching: boolean;
+}) => {
+  const [value, setValue] = useState(initialValue);
+
+  // Sync with deep links or back-button clicks
+  useEffect(() => {
+    setValue(initialValue);
+  }, [initialValue]);
+
+  // Tell the parent to update the URL after 500ms of silence
+  const debouncedPush = useDebouncedCallback((val: string) => {
+    onDebouncedSearch(val);
+  }, 500);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.currentTarget.value;
+    setValue(val); // Instant UI update (Zero lag)
+    debouncedPush(val); // Starts the background timer
+  };
+
+  return (
+    <Group gap="sm" style={{ flexGrow: 1, flexBasis: "300px" }}>
+      <TextInput
+        placeholder="Search URL, IP, User, UA, or Threat..."
+        leftSection={<IconSearch size={16} />}
+        value={value}
+        onChange={handleChange}
+        style={{ flexGrow: 1 }}
+        w={{ base: "100%", sm: "auto" }}
+      />
+      {isFetching && <Loader size="xs" color="gray" />}
+    </Group>
+  );
+};
+
+export default function RawLogExplorer({ jobId }: RawLogExplorerProps) {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const urlQuery = searchParams.get("q") || "";
+  const [page, setPage] = useState(1);
+
+  const handleSearchUpdate = (newQuery: string) => {
+    if (newQuery === urlQuery) return; // Prevent redundant URL updates
+
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        if (newQuery) next.set("q", newQuery);
+        else next.delete("q");
+        return next;
+      },
+      { replace: true },
+    );
+    setPage(1);
+  };
+
+  const { data, isFetching } = useRawLogsPaginated(jobId, page, 20, urlQuery);
+
+  const logs = data?.data || [];
+  const totalPages = data?.totalPages || 1;
+  const totalRecords = data?.totalRecords || 0;
+
+  return (
+    <Paper
+      withBorder
+      shadow="sm"
+      radius="md"
+      w="100%"
+      style={{ overflow: "hidden" }}
+    >
+      <Group
+        justify="space-between"
+        p="md"
+        style={{ borderBottom: "1px solid var(--mantine-color-border)" }}
+        wrap="wrap"
+      >
+        <IsolatedSearchBar
+          initialValue={urlQuery}
+          isFetching={isFetching}
+          onDebouncedSearch={handleSearchUpdate}
+        />
+        <Text size="sm" c="dimmed" style={{ whiteSpace: "nowrap" }}>
+          {totalRecords.toLocaleString()} events found
+        </Text>
+      </Group>
+
+      <MemoizedLogTable logs={logs} isFetching={isFetching} />
 
       {/* Hide pagination if there are no records */}
       {totalPages > 0 && (

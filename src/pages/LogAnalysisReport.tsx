@@ -12,7 +12,7 @@ import {
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useInView } from 'react-intersection-observer';
 import RawLogExplorer from '../components/RawLogExplorer'; 
-import { useDebouncedValue } from "@mantine/hooks";
+import { useDebouncedCallback } from "@mantine/hooks";
 import { useLogAnalysis, useLogEventsInfinite } from '../hooks/useLogs';
 
 // Helper to determine severity colors
@@ -30,6 +30,36 @@ const getSeverityColor = (severity?: any) => {
 const extractUser = (desc: string) => {
   const match = desc?.match(/([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+)/);
   return match ? match[1] : 'Unknown User';
+};
+
+const IsolatedTimelineSearch = ({
+  onSearchChange,
+}: {
+  onSearchChange: (val: string) => void;
+}) => {
+  const [value, setValue] = useState('');
+
+  // Debounce the call to the parent component
+  const debouncedPush = useDebouncedCallback((val: string) => {
+    onSearchChange(val);
+  }, 400);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.currentTarget.value;
+    setValue(val);
+    debouncedPush(val);
+  };
+
+  return (
+    <TextInput 
+      placeholder="Search by IP Address..." 
+      leftSection={<IconSearch size={16} />}
+      value={value}
+      onChange={handleChange}
+      w={{ base: '100%', sm: 200 }}
+      size="sm"
+    />
+  );
 };
 
 // ==========================================
@@ -158,8 +188,7 @@ export default function LogAnalysisReport() {
   const [severityFilter, setSeverityFilter] = useState<string | null>('all'); 
   
   // Debounced IP Search to prevent API spam while typing
-  const [searchInput, setSearchInput] = useState<string>(''); 
-  const [searchIp] = useDebouncedValue(searchInput, 400);
+  const [searchIp, setSearchIp] = useState<string>('');
 
   const { data: report, isLoading: isReportLoading, isError: isReportError } = useLogAnalysis(jobId);
 
@@ -302,14 +331,7 @@ export default function LogAnalysisReport() {
                   </Group>
                   
                   <Group gap="md">
-                    <TextInput 
-                      placeholder="Search by IP Address..." 
-                      leftSection={<IconSearch size={16} />}
-                      value={searchInput}
-                      onChange={(e) => setSearchInput(e.currentTarget.value)}
-                      w={{ base: '100%', sm: 200 }}
-                      size="sm"
-                    />
+                    <IsolatedTimelineSearch onSearchChange={setSearchIp} />
                     
                     <Select
                       value={severityFilter}

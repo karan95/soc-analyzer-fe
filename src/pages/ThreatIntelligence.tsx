@@ -35,7 +35,7 @@ const getPercent = (count: number, total: number) => {
 
 export default function ThreatIntelligence() {
   const navigate = useNavigate();
-  const [timeRange, setTimeRange] = useState<string | null>('24h');
+  const [timeRange, setTimeRange] = useState<string | null>('7d');
 
   const { data, isLoading } = useGlobalIntelligence(timeRange);
 
